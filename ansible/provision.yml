@@ -1,0 +1,19 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - vlan
+
+- hosts: inetRouter,centralRouter
+  become: true
+  gather_facts: true
+
+  roles:
+    - lacp
+
+
+
+
+

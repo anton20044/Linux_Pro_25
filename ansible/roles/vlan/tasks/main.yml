@@ -1,0 +1,56 @@
+---
+- name: install software on Ubuntu
+  apt:
+    name:
+    - traceroute
+    - tcpdump
+    - net-tools
+    state: present
+    update_cache: true
+  when: (ansible_os_family == "Debian")
+
+- name: install software on CentOS
+  yum:
+    name:
+    - traceroute
+    - tcpdump
+    - net-tools
+    state: present
+    update_cache: true
+  when: (ansible_os_family == "RedHat")
+
+- name: set up forward packages across routers
+  sysctl:
+    name: net.ipv4.conf.all.forwarding
+    value: '1'
+    state: present
+  when: "'routers' in group_names"
+
+- name: copy client1 and server1 config
+  template:
+    src: "{{ ansible_hostname }}"
+    dest: /etc/sysconfig/network-scripts/ifcfg-vlan1
+    owner: root
+    group: root
+    mode: 0644
+  when: (ansible_hostname == "testClient1" or ansible_hostname == "testServer1")
+
+- name: restart network manager
+  ansible.builtin.service:
+    name: NetworkManager
+    state: restarted
+  when: (ansible_hostname == "testClient1" or ansible_hostname == "testServer1")
+
+- name: copy client2 and server2 config
+  template:
+    src: "{{ ansible_hostname }}"
+    dest: /etc/netplan/50-cloud-init.yaml
+    owner: root
+    group: root
+    mode: 0644
+  when: (ansible_hostname == "testClient2" or ansible_hostname == "testServer2")
+
+- name: netplan try
+  ansible.builtin.shell: netplan try
+  when: (ansible_hostname == "testClient2" or ansible_hostname == "testServer2")
+
